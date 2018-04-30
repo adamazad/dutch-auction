@@ -21,7 +21,8 @@
                                                         "source-map-support" "^0.5.5",
                                                         "sqlite" "^2.9.1",
                                                         "sqlite3" "^4.0.0",
-                                                        "sse-express" "next"}
+                                                        "sse-express" "next"
+                                                        "minimist" "1.2.0"}
                                        :optimizations  :none
                                        :target         :nodejs
                                        :parallel-build true
