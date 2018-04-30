@@ -18,14 +18,14 @@
                      :connection       #js {:filename "./database.sqlite"}
                      :useNullAsDefault true}))
 
-(defn create-tables []
+(defn create-tables [f]
   (-> (.-schema knex)
-      (.dropTable "User")
+      (.dropTableIfExists "User")
       (.createTable
         "User" (fn [t]
                  (-> t (.increments "id") (.primary))
                  (-> t (.string "name" 100) (.notNullable) (.unique))))
-      (.dropTable "Auction")
+      (.dropTableIfExists "Auction")
       (.createTable
         "Auction" (fn [t]
                     (-> t (.increments "id") (.primary))
@@ -37,7 +37,7 @@
                     (-> t (.integer "highestBid"))
                     (-> t (.integer "highestBidder") (.unsigned))
                     (-> t (.foreign "highestBidder") (.references "User.id"))))
-      (p/then prn)))
+      (p/then f)))
 
 (defn transact-login [uname]
   (.transaction knex
@@ -52,7 +52,7 @@
 
 (def n-auctions 3)
 
-(defn insert-dummy-data []
+(defn insert-dummy-data [f]
   (dotimes [i n-user]
     (-> knex (.insert #js {:name (str (inc i))}) (.into "User") (.then prn)))
   (dotimes [i n-auctions]
@@ -62,7 +62,7 @@
                       :initialPrice (+ (rand-int 300) 30)
                       :createdAt    (- (js/Date.now) (* 1000 20 i))})
         (.into "Auction")
-        (.then prn))))
+        (.then f))))
 
 (defn process-auction [{:keys [createdAt highestBid initialPrice] :as m}]
   (let [p-min (/ (- (js/Date.now) createdAt) 1000 60)
@@ -187,7 +187,7 @@
                                        (send-updates [(:title auc)])
                                        (.end res))
                                      (transact-auction auc))
-                              (next (new js/Error "no title provided") ))
+                              (next (new js/Error "no title provided")))
                             )))
       (.get "/updates" (sse-express)
             (fn [req res]
@@ -205,14 +205,18 @@
 (defonce server (atom nil))
 
 (defn restart []
-  (create-tables)
-  (insert-dummy-data)
-  (when @server (.close @server))
-  (let [s (.createServer http app)]
-    (.listen s 3000 "0.0.0.0")
-    (auction-timer)
-    (reset! server s)))
+  (create-tables
+    (fn []
+      (insert-dummy-data
+        (fn []
+          (when @server (.close @server))
+          (let [s (.createServer http app)]
+            (.listen s 3000 "0.0.0.0")
+            (auction-timer)
+            (reset! server s)))))))
 
-(comment (restart))
+(comment (restart)
+         (.close @server)
+         (js/clearInterval @timer))
 
 (set! *main-cli-fn* restart)
