@@ -10,7 +10,7 @@ Demo app implementing a dutch auction.
 ## How to build with Docker
 
 There is a Dockerfile for simple deployment
-The page is available at [http://localhost:3000]("http://localhost:3000")
+The page is available at [http://localhost:3000](http://localhost:3000)
 
 ```
 $ docker build -t dutch .
