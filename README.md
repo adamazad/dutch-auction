@@ -3,7 +3,9 @@
 Demo app implementing a dutch auction.
 * Updates to every auction state are sent over SSE (Server Sent Events).
 * All security aspects have been neglected
-* Due to the Author's inexperience with the node ecosystem, the app has been implemented in ClojureScript
+* Due to the Author's inexperience with the Node and NPM ecosystem,
+  the app has been implemented in ClojureScript using the Google Closure
+  JavaScript Compiler
 
 ## How to build with Docker
 
